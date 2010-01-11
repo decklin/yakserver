@@ -1,0 +1,152 @@
+YakServer
+=========
+
+This is the local companion to YakShave; it runs on your machine and
+responds to HTTP requests by running commands that you specify. While
+it contains my "killer app" for YakShave (the one that got me shaving
+that yak in the first place), it primarily exists for you to add your
+own code.
+
+Installation
+============
+
+YakServer is implemented with [Sinatra][1], using [Rack][2] for
+authentication. To install both, run
+
+    gem install sinatra
+
+or, on Debian/Ubuntu systems,
+
+    apt-get install libsinatra-ruby
+
+You may also want to install [Mongrel][4] for better performance, and
+[Haml][3] if you're going to write modules that serve HTML. Use of
+single-threaded servers such as Thin is not recommended.
+
+[1]: http://www.sinatrarb.com/
+[2]: http://rack.rubyforge.org/
+[3]: http://haml-lang.org/
+[4]: http://mongrel.rubyforge.org/
+
+Before starting YakServer, create the directory ~/.yakserver and put
+your desired username and password, in the format "username:password"
+(without the quotes), in the file ~/.yakserver/credentials.
+
+To start YakServer, run
+
+    $PATH_TO_YAKSERVER/yakserver.rb &
+
+YakServer will listen on port 2562. You can change this port by creating
+the file ~/.yakserver/port and putting a valid port number in it.
+
+If you prefer, you can also go to the directory where YakServer is
+installed and run rackup. This currently has the limitation that
+the port number and choice of server (Mongrel) are hardcoded in the
+config.ru file.
+
+To make use of your own modules and static files, create the directories
+
+    ~/.yakserver/modules
+    ~/.yakserver/public
+
+And place files in them. For an example of how to write a module, see
+modules/hello.rb. Before writing your own modules, be sure to read the
+"Security" section below. You should skim it even if you don't want to
+write any modules.
+
+NOTE: If you add modules, you'll need to kill and restart YakServer.
+I'm not sure if there's a way around this. Static files can be added or
+updated without restarting.
+
+In the Box
+==========
+
+There are two included modules that actually do something: edit.rb and
+userstyles.rb.
+
+edit.rb
+-------
+
+edit.rb allows a client to POST some text to /edit; it then writes
+this data to a temp file and executes $EDITOR on it. When the editor
+exits, it returns the edited text to the client (the client,
+obviously, should have a very long timeout).
+
+You can use it, for example, as a perverse sort of replacement for
+moreutils' vipe(1):
+
+    $ ls | curl -u username --data-binary @- http://localhost:2562/edit
+
+After you perform your edits, the result will be printed to standard
+output.
+
+YakShave uses it to enable editing of INPUT and TEXTAREA elements;
+press the key sequence defined in yakedit.js over there to start an
+edit.
+
+N.b. Your $EDITOR should be a program that creates its own window, not
+one that uses a terminal; standard input and output will be closed
+before executing it. Allowing an editor to inherit stdio would cause
+problems if more than one request was ever active at the same time.
+
+userstyles.rb
+-------------
+
+userstyles.rb serves faux user stylesheets for any URL, at
+/style/get?url=PERCENT_ENCODED_URL. To use it, create the directory
+
+    ~/.yakserver/userstyles
+
+and within that the file __all__.css (which will be included for all
+URLs). Then, create files and directories corresponding to the domains
+and pathnames you want to style, e.g.:
+
+    example.com.css (all pages on domain)
+    example.com/foo.css (a resource, or all resources in a directory)
+    example.com/foo/bar.css (ditto)
+    www.example.com.css (a specific subdomain)
+    www.example.com/baz.css (a resource or dir, on subdomain only)
+
+To get a better idea of which filenames will be tried for a given page,
+just inspect the stylesheet (comments will be added for each file,
+whether or not they actually exist).
+
+You can also make a POST request (no body required) to /style/edit that
+will launch $EDITOR (much like edit.rb, but without waiting for the
+editor to exit) on all existing CSS files for a given URL.
+
+To add a LINK tag for these stylesheets to all pages, install the
+companion extension YakStyles.
+
+N.b. For a discussion of why these are not (and cannot be) "real" user
+stylesheets, see http://crbug.com/2393.
+
+Security
+========
+
+YakServer uses the username and password that you set for basic HTTP
+authentication. POST resources always require auth; GET resources can
+require it if they need to. When writing your own modules, bear in
+mind the basic principle that GET requests should be idempotent and
+POST should be used for things with side effects. If it runs a command
+of any sort, it should probably be a POST.
+
+Care should be taken not to leak sensitive data to malicious web
+pages. Code using XMLHttpRequest will be prevented by the same-origin
+policy from making any requests to localhost, but a page can still
+include a GET resource or trick you into submitting a GET or POST
+form. If this happens, the standard HTTP auth dialog will pop up --
+**don't enter your username and password**! Chrome will remember your
+credentials and continue handing them over until you restart it.
+Authenticated requests should only be made from extension code or a
+client such as `curl` that does not cache credentials.
+
+It should be noted that basic auth is not actually secure; the
+credentials are transmitted unencrypted. YakServer only listens on the
+loopback interface (127.0.0.1), so only someone who already has root
+on your machine should be able to sniff your traffic. We are merely
+interested in preventing third parties from poking at it.
+
+Despite the precautions above, it is probably best to avoid using
+YakServer for anything (e.g. a potentially destructive command) that
+even *might* be an actual security risk. Use your best judgement.
