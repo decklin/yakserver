@@ -15,16 +15,16 @@ class YakServer
   end
 
   # Do something with side effects. Because this is a POST route, it
-  # always requires authorization. Note that this form of Kernel#system
-  # does not use the shell to interpret arguments. Do **not** use the
-  # one that does. You are not smarter than the shell.
+  # always requires authentication. Note that this form of
+  # Kernel#system does not use the shell to interpret arguments. Do
+  # **not** use the one that does. You are not smarter than the shell.
 
   post '/sayhi' do
     message = params[:message] || "Hi."
     system 'say', message
   end
 
-  # This is a GET route, but we want authorization on it anyway.
+  # This is a GET route, but we want authentication on it anyway.
 
   get '/handshake' do
     require_auth!
