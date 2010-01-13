@@ -50,7 +50,7 @@ To make use of your own modules and static files, create the directories
     ~/.yakserver/public
 
 And place files in them. For an example of how to write a module, see
-modules/hello.rb. Before writing your own modules, be sure to read the
+examples/hello.rb. Before writing your own modules, be sure to read the
 "Security" section below. You should skim it even if you don't want to
 write any modules.
 
@@ -93,13 +93,18 @@ userstyles.rb
 -------------
 
 userstyles.rb serves faux user stylesheets for any URL, at
-/style/get?url=PERCENT_ENCODED_URL. To use it, create the directory
+/style/get?url=PERCENT_ENCODED_URL. To use it, first create the
+directory
 
     ~/.yakserver/userstyles
 
-and within that the file __all__.css (which will be included for all
-URLs). Then, create files and directories corresponding to the domains
-and pathnames you want to style, e.g.:
+Copy the file examples/__all__.css to there (or, if you prefer, create
+your own from scratch). The contents of this file will be included in
+the stylesheet for all pages.
+
+Then, create files and directories corresponding to the domains and
+pathnames you want to style, e.g.: (this is relative to the userstyles
+directory)
 
     example.com.css (all pages on domain)
     example.com/foo.css (a resource, or all resources in a directory)
