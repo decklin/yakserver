@@ -85,9 +85,9 @@ press the key sequence defined in yakedit.js over there to start an
 edit.
 
 N.b. Your $EDITOR should be a program that creates its own window, not
-one that uses a terminal; standard input and output will be closed
-before executing it. Allowing an editor to inherit stdio would cause
-problems if more than one request was ever active at the same time.
+one that uses a terminal; standard input will be closed before executing
+it. Using a terminal editor would get ugly if you made another request
+while the editor was running.
 
 userstyles.rb
 -------------

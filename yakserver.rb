@@ -49,6 +49,11 @@ class YakServer < Sinatra::Base
       dir = Dir.new(d) rescue next
       dir.each {|p| load "#{d}/#{p}" unless p == '.' || p == '..' }
     end
+
+    # We might fork an editor later. If we have a controlling terminal now,
+    # give it up so that the editor doesn't get confused.
+
+    STDIN.reopen('/dev/null')
   end
 
   helpers do

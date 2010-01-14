@@ -69,14 +69,7 @@ class UserStyle
 
   def edit
     lpaths = css_paths.collect {|p| local(p)}.select {|p| File.exists? p}
-    fork_editor(*lpaths)
-  end
-
-  def fork_editor(*args)
-    if fork.nil?
-      [STDIN, STDOUT, STDERR].each {|fd| fd.reopen('/dev/null') }
-      exec(ENV['EDITOR'], *args)
-    end
+    system ENV['EDITOR'], *lpaths
   end
 
 end

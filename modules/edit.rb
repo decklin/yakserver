@@ -11,7 +11,7 @@ class YakServer
     temp = Tempfile.new('yakserver')
     temp.write(data)
     temp.close
-    fork_editor_and_wait(temp.path)
+    system ENV['EDITOR'], temp.path
     read_and_unlink(temp)
   end
 
@@ -19,15 +19,6 @@ class YakServer
     data = f.open.read
     f.unlink
     data
-  end
-
-  def fork_editor_and_wait(*args)
-    if fork.nil?
-      [STDIN, STDOUT, STDERR].each {|fd| fd.reopen('/dev/null') }
-      exec(ENV['EDITOR'], *args)
-    else
-      Process.wait
-    end
   end
 
 end
