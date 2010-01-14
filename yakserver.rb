@@ -10,6 +10,7 @@ rescue LoadError
 end
 
 require 'sinatra/base'
+require 'fcntl'
 
 # Writing this as a Sinatra::Base subclass so we can also use rackup. See
 # below for the magic that makes it run.
@@ -50,10 +51,9 @@ class YakServer < Sinatra::Base
       dir.each {|p| load "#{d}/#{p}" unless p == '.' || p == '..' }
     end
 
-    # We might fork an editor later. If we have a controlling terminal now,
-    # give it up so that the editor doesn't get confused.
-
-    STDIN.reopen('/dev/null')
+    [STDIN, STDOUT, STDERR].each do |f|
+      f.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+    end
   end
 
   helpers do
@@ -68,6 +68,7 @@ class YakServer < Sinatra::Base
   end
 
   before do
+    # Enforce access policy
     unless request.request_method == 'GET' || request.request_method == 'HEAD'
       require_auth!
     end
