@@ -155,3 +155,10 @@ interested in preventing third parties from poking at it.
 Despite the precautions above, it is probably best to avoid using
 YakServer for anything (e.g. a potentially destructive command) that
 even *might* be an actual security risk. Use your best judgement.
+
+Bugs and Caveats
+================
+
+As mentioned above, because Thin is single-threaded, a long-running
+request (such as one to /edit) will block other requests. If there is
+a way to get around this please let me know.
