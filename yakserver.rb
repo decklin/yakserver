@@ -24,10 +24,13 @@ class YakServer < Sinatra::Base
     static_dir = "#{home_dir}/public"
     mods_dir = "#{home_dir}/modules"
 
-    begin
-      if File.stat(creds_path).mode & 077 != 0
-        STDERR.puts "Warning: credentials file readable by other users."
-        STDERR.puts "Please ``chmod 600 #{creds_path}''."
+    creds = begin
+      File.open(creds_path) do |f|
+        if f.lstat.mode & 077 != 0
+          STDERR.puts "Warning: credentials file readable by other users."
+          STDERR.puts "Please ``chmod 600 #{creds_path}''."
+        end
+        f.read.strip.split(':') rescue nil
       end
     rescue
       STDERR.puts "Error: no credentials. Clients will be unable to auth."
@@ -35,8 +38,11 @@ class YakServer < Sinatra::Base
       exit 1
     end
 
-    creds = File.open(creds_path).read.strip.split(':') rescue nil
-    port = File.open(port_path).read.to_i rescue 2562
+    port = begin
+      File.open(port_path) {|f| f.read.to_i }
+    rescue
+      2562
+    end
 
     enable :static
 
@@ -49,6 +55,7 @@ class YakServer < Sinatra::Base
     [File.dirname(__FILE__)+"/modules", mods_dir].each do |d|
       dir = Dir.new(d) rescue next
       dir.each {|p| load "#{d}/#{p}" unless p == '.' || p == '..' }
+      dir.close
     end
 
     [STDIN, STDOUT, STDERR].each do |f|
