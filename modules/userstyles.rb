@@ -69,7 +69,7 @@ class UserStyle
 
   def edit
     lpaths = css_paths.collect {|p| local(p)}.select {|p| File.exists? p}
-    system ENV['EDITOR'], *lpaths
+    exec ENV['EDITOR'], *lpaths if fork.nil?
   end
 
 end

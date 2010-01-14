@@ -79,6 +79,9 @@ class YakServer < Sinatra::Base
     unless request.request_method == 'GET' || request.request_method == 'HEAD'
       require_auth!
     end
+
+    # It's ok for modules to leave child processes and finish; do cleanup.
+    Process.wait(-1, Process::WNOHANG) rescue nil
   end
 
   # This is a kinda lame index page, because you probably already had to
